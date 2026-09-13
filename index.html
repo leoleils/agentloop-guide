@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentLoop · 阿里云 Agent 观测与优化平台 · 文档解读</title>
+<style>
+  :root{
+    --ink:#111;
+    --ink-2:#333;
+    --ink-3:#666;
+    --line:#e5e5e5;
+    --line-2:#d0d0d0;
+    --bg:#fff;
+    --bg-2:#fafafa;
+    --accent:#111;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",Arial,sans-serif;
+    font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:80px 32px 120px}
+  /* Header */
+  header.cover{border-top:2px solid var(--ink);padding-top:36px;margin-bottom:80px}
+  .kicker{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);margin-bottom:20px}
+  h1.title{font-size:56px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0 0 20px}
+  h1.title small{display:block;font-size:20px;font-weight:400;color:var(--ink-3);margin-top:14px;letter-spacing:0}
+  .meta{display:flex;flex-wrap:wrap;gap:32px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
+    font-size:13px;color:var(--ink-3)}
+  .meta div span{display:block;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#999;margin-bottom:4px}
+  .meta div strong{color:var(--ink);font-weight:500}
+  /* Sections */
+  section{margin-bottom:80px}
+  h2{font-size:30px;font-weight:700;letter-spacing:-.01em;margin:0 0 8px;padding-bottom:16px;
+    border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:16px}
+  h2 .num{font-size:12px;font-weight:500;color:var(--ink-3);letter-spacing:.2em;min-width:36px}
+  h3{font-size:19px;font-weight:600;margin:36px 0 12px;color:var(--ink)}
+  h4{font-size:15px;font-weight:600;margin:24px 0 8px;color:var(--ink-2);letter-spacing:.02em}
+  p{margin:0 0 14px;color:var(--ink-2)}
+  p.lead{font-size:17px;color:var(--ink);margin-bottom:24px}
+  ul,ol{padding-left:22px;margin:0 0 16px;color:var(--ink-2)}
+  li{margin-bottom:8px}
+  li::marker{color:var(--ink-3)}
+  strong{color:var(--ink);font-weight:600}
+  code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.88em;background:var(--bg-2);
+    border:1px solid var(--line);padding:1px 6px;border-radius:2px;color:var(--ink)}
+  pre{background:var(--bg-2);border:1px solid var(--line);padding:16px 18px;overflow-x:auto;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;line-height:1.6;margin:12px 0 20px;border-radius:2px}
+  pre code{background:none;border:none;padding:0;font-size:inherit}
+  /* Cards */
+  .grid{display:grid;gap:16px;margin:20px 0}
+  .grid.g2{grid-template-columns:repeat(2,1fr)}
+  .grid.g3{grid-template-columns:repeat(3,1fr)}
+  .grid.g4{grid-template-columns:repeat(4,1fr)}
+  .card{border:1px solid var(--line);padding:20px;background:#fff;border-radius:2px;transition:border-color .2s}
+  .card:hover{border-color:var(--ink)}
+  .card .tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+  .card h4{margin:0 0 8px;font-size:16px;color:var(--ink)}
+  .card p{font-size:14px;line-height:1.65;margin:0;color:var(--ink-3)}
+  /* Pain points */
+  .pain{display:grid;grid-template-columns:60px 1fr;gap:16px;padding:20px 0;border-top:1px solid var(--line)}
+  .pain:last-child{border-bottom:1px solid var(--line)}
+  .pain .idx{font-size:32px;font-weight:700;color:var(--ink);line-height:1}
+  .pain .body h4{margin:0 0 6px;font-size:17px;color:var(--ink)}
+  .pain .body p{margin:0;font-size:14px;color:var(--ink-3)}
+  /* Table */
+  table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:14px}
+  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg-2);font-weight:600;color:var(--ink);font-size:13px;letter-spacing:.02em;border-bottom:1px solid var(--line-2)}
+  tr:hover td{background:var(--bg-2)}
+  td.center,th.center{text-align:center}
+  .yes{color:var(--ink);font-weight:600}
+  .no{color:#bbb}
+  /* Flywheel diagram */
+  .flywheel{margin:28px 0;padding:28px;background:var(--bg-2);border:1px solid var(--line);border-radius:2px}
+  /* Callout */
+  .callout{border-left:3px solid var(--ink);padding:16px 20px;background:var(--bg-2);margin:20px 0;font-size:14px;color:var(--ink-2)}
+  .callout strong{color:var(--ink)}
+  /* Chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .chip{border:1px solid var(--line-2);padding:4px 10px;font-size:12px;color:var(--ink-2);border-radius:2px;background:#fff}
+  /* Footer */
+  footer{margin-top:80px;padding-top:24px;border-top:2px solid var(--ink);font-size:13px;color:var(--ink-3)}
+  footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)}
+  footer a:hover{border-bottom-color:var(--ink)}
+  /* Responsive */
+  @media (max-width:720px){
+    .wrap{padding:48px 20px 80px}
+    h1.title{font-size:38px}
+    .grid.g3,.grid.g4{grid-template-columns:repeat(2,1fr)}
+    table{font-size:13px}
+    th,td{padding:8px 10px}
+  }
+
+  /* Figures */
+  .figure{margin:24px 0}
+  .figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px}
+  .figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;text-align:center;line-height:1.6}
+  /* Print */
+  @media print{
+    @page{size:A4;margin:16mm}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .wrap{padding:0;max-width:none}
+    section{break-inside:avoid;page-break-inside:avoid;margin-bottom:32px}
+    pre,table,.card,.flywheel{break-inside:avoid;page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span style="font-size:14px;font-weight:600;color:var(--ink);letter-spacing:.05em">阿里云 · Alibaba Cloud</span>
+  </div>
+  <div class="kicker">Agent Observability &amp; Optimization</div>
+  <h1 class="title">AgentLoop<small>面向企业级智能体的一站式自进化平台</small></h1>
+  <div class="meta">
+    <div><span>产品定位</span><strong>Agent 观测 · 审计 · 评估 · 优化</strong></div>
+    <div><span>核心机制</span><strong>数据飞轮 Data Flywheel</strong></div>
+    <div><span>文档版本</span><strong>2026-07 至 2026-09</strong></div>
+    <div><span>控制台</span><strong><a href="https://agentloop.console.aliyun.com/agentloop/home" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">agentloop.console.aliyun.com</a></strong></div>
+  </div>
+  <div style="margin-top:32px;padding:20px;border:1px solid var(--line);background:var(--bg-2);border-radius:2px;display:flex;align-items:center;gap:20px">
+    <div style="flex-shrink:0;width:48px;height:48px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:600">雷</div>
+    <div>
+      <div style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">TAM 雷雨 · 技术服务专家</div>
+      <div style="font-size:13px;color:var(--ink-3);line-height:1.6">阿里云全栈 AI 技术专家</div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. 产品定位 ============ -->
+<section>
+  <h2><span class="num">01</span>产品定位与价值主张</h2>
+  <p class="lead">AgentLoop 是阿里云推出的面向企业级智能体的一站式自进化平台。它把 Agent 在生产环境中的每一次执行，都变成一份可观测、可评估、可优化的资产，让 Agent 越用越聪明——更好、更快、更省、更安全。</p>
+
+  <p>不同于传统 LLMOps 工具只面向单次模型调用提供 LLM-as-a-Judge、LLM Playground 等单点功能，AgentLoop 面向真实生产环境的 Agent 应用，提供 <strong>Agent-as-a-Judge、Agent Playground、Trace2Dataset</strong> 等场景化闭环能力，让 Agent 在生产环境中形成"可观测 → 可评估 → 可优化"的持续进化飞轮。</p>
+
+  <p style="font-size:14px;color:var(--ink-3);margin-top:20px">📖 官方文档：<a href="https://help.aliyun.com/zh/document_detail/3033860.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">什么是 AgentLoop</a> · <a href="https://www.aliyun.com/product/agentloop" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">产品主页</a> · <a href="https://help.aliyun.com/zh/document_detail/3042001.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">核心概念</a></p>
+
+  <div class="grid g4">
+    <div class="card"><div class="tag">Quality</div><h4>质量</h4><p>Agent 级评估拦截退化，Bad Case 定向修复。</p></div>
+    <div class="card"><div class="tag">Efficiency</div><h4>效率</h4><p>Trace 全链路还原推理路径，故障定位从 2 小时压缩到分钟级。</p></div>
+    <div class="card"><div class="tag">Cost</div><h4>成本</h4><p>Token 消耗精细归因到 Agent / 工具 / Prompt，支撑 FinOps 治理。</p></div>
+    <div class="card"><div class="tag">Security</div><h4>安全</h4><p>每一步工具调用留痕，异常行为分钟级预警，满足强合规审计。</p></div>
+  </div>
+</section>
+
+<!-- ============ 2. 为什么需要 ============ -->
+<section>
+  <h2><span class="num">02</span>为什么需要 AgentLoop</h2>
+  <p>当企业从 LLM 应用迈入 Agent 应用阶段，传统 APM 与 LLMOps 工具集体失灵。Agent 的多步推理、工具调用、多模型协作带来四大核心挑战：</p>
+
+  <div class="pain">
+    <div class="idx">01</div>
+    <div class="body"><h4>质量退化难感知</h4><p>Agent 多步推理输出质量下降，故障定位平均超 2 小时，只能被动等待工单和客诉暴露问题。</p></div>
+  </div>
+  <div class="pain">
+    <div class="idx">02</div>
+    <div class="body"><h4>成本暴涨难归因</h4><p>Token 异常消耗可达平峰期的 10 倍以上，缺乏精细归因手段，无法实施 FinOps 治理。</p></div>
+  </div>
+  <div class="pain">
+    <div class="idx">03</div>
+    <div class="body"><h4>变更风险难拦截</h4><p>Prompt、Skill、模型变更缺乏自动化质量门禁，大部分变更故障本可拦截却被放过至线上。</p></div>
+  </div>
+  <div class="pain">
+    <div class="idx">04</div>
+    <div class="body"><h4>行为审计无留痕</h4><p>Agent 多步执行轨迹缺乏审计与回放能力，难以满足强合规需求行业的留痕要求。</p></div>
+  </div>
+</section>
+
+<!-- ============ 3. 数据飞轮 ============ -->
+<section>
+  <h2><span class="num">03</span>核心机制：数据飞轮</h2>
+  <p>AgentLoop 的一切能力围绕一个核心机制展开——<strong>数据飞轮（Data Flywheel）</strong>。原始运行数据一次采集，四大场景复用，价值随时间持续增长。</p>
+
+  <div class="flywheel">
+    <svg viewBox="0 0 720 200" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#111"/>
+        </marker>
+      </defs>
+      <!-- Nodes -->
+      <g font-family="-apple-system,PingFang SC,Helvetica,Arial" font-size="13" fill="#111">
+        <rect x="20" y="70" width="120" height="60" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="80" y="95" text-anchor="middle" font-weight="600">线上运行</text>
+        <text x="80" y="115" text-anchor="middle" fill="#666" font-size="11">Agent Runtime</text>
+
+        <rect x="180" y="70" width="120" height="60" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="240" y="95" text-anchor="middle" font-weight="600">Trace / 日志</text>
+        <text x="240" y="115" text-anchor="middle" fill="#666" font-size="11">Raw Data</text>
+
+        <rect x="340" y="70" width="120" height="60" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="400" y="95" text-anchor="middle" font-weight="600">Trajectory</text>
+        <text x="400" y="115" text-anchor="middle" fill="#666" font-size="11">调用轨迹</text>
+
+        <rect x="500" y="70" width="120" height="60" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="560" y="95" text-anchor="middle" font-weight="600">Dataset + Exp</text>
+        <text x="560" y="115" text-anchor="middle" fill="#666" font-size="11">数据资产</text>
+
+        <rect x="640" y="70" width="60" height="60" fill="#111" stroke="#111" stroke-width="1.5"/>
+        <text x="670" y="105" text-anchor="middle" fill="#fff" font-weight="600" font-size="12">优化</text>
+
+        <!-- Arrows -->
+        <line x1="140" y1="100" x2="180" y2="100" stroke="#111" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="300" y1="100" x2="340" y2="100" stroke="#111" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="460" y1="100" x2="500" y2="100" stroke="#111" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="620" y1="100" x2="640" y2="100" stroke="#111" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <!-- Feedback loop -->
+        <path d="M 670 130 Q 670 175 400 175 Q 80 175 80 130" fill="none" stroke="#111" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+        <text x="380" y="192" text-anchor="middle" fill="#666" font-size="11">四大复用场景：观测 · 审计 · 评估 · 优化 → 产生更高质量数据</text>
+
+        <!-- Top labels -->
+        <text x="80" y="55" text-anchor="middle" fill="#999" font-size="10" letter-spacing="1">STEP 1</text>
+        <text x="240" y="55" text-anchor="middle" fill="#999" font-size="10" letter-spacing="1">STEP 2</text>
+        <text x="400" y="55" text-anchor="middle" fill="#999" font-size="10" letter-spacing="1">STEP 3</text>
+        <text x="560" y="55" text-anchor="middle" fill="#999" font-size="10" letter-spacing="1">STEP 4</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="callout"><strong>飞轮的关键：</strong>数据一次采集，生成完整 Trajectory 轨迹，在观测、审计、评估、优化四大场景中复用，价值随时间持续增长。</div>
+</section>
+
+<!-- ============ 4. 核心功能 ============ -->
+<section>
+  <h2><span class="num">04</span>核心功能特性</h2>
+  <p>AgentLoop 提供 7 大核心功能模块，构成完整的 Agent 生命周期管理闭环。</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">Feature 01</div>
+      <h4>Agent 全栈观测</h4>
+      <p>阿里云自研探针 + 开源探针 + 云产品深度集成，端到端无侵入采集链路、指标、日志。基于 UModel 自动发现 Agent → Tool → Model 拓扑，构建 Agent Ontology 全栈视图，结合 STAROps 智能诊断引擎定位性能瓶颈与 Token 消耗热点。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Feature 02</div>
+      <h4>Agent 行为审计</h4>
+      <p>为每一步工具调用与决策分支构建<strong>不可篡改</strong>的执行轨迹证据链。内置异常行为检测引擎，实时识别越权操作、数据外发等风险模式，分钟级完成异常风险预警。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Feature 03</div>
+      <h4>Agent-as-a-Judge 评估</h4>
+      <p>评估器本身就是具备复杂任务规划、工具使用、多步推理能力的 Agent，基于 Trajectory 深度评估——可回放轨迹、调用验证工具复核结果、对比历史基准，接近人类专家水平。支持预置评估器（幻觉、正确性、任务完成度）与自定义评估器。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Feature 04</div>
+      <h4>Agent 实验 / Playground</h4>
+      <p>Playground 在线实验对比，支持 Agent 与 LLM 两种类型实验。多组变量批量运行（Agent 实例、模型版本、Prompt 版本、参数、工具），提供统计显著性分析，用数据驱动变更决策。<em>预计 2026-06-30 前正式上线。</em></p>
+    </div>
+    <div class="card">
+      <div class="tag">Feature 05</div>
+      <h4>数据中心 / Trace2Dataset</h4>
+      <p>Pipeline 引擎自动化编排：<strong>数据源接入 → 数据降维（过滤/去重/采样）→ 特征提取 → AI 加工 → 写入目标数据集</strong>。把线上 Trace 持续加工为 Golden / BadCase / 后训练数据集，节省 90%+ 人工数据处理成本。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Feature 06</div>
+      <h4>记忆库 &amp; 经验库</h4>
+      <p>记忆库四种策略：事实（Facts）、情节（Episodic）、摘要（Summary）、自定义（Custom），兼容 Mem0 API。经验库（内测中）从轨迹中自动挖掘可复用操作知识，支持组织级共享，让单个 Agent 的成功经验跨应用复用。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Feature 07</div>
+      <h4>Agent 资产管理</h4>
+      <p>Prompt 与 Skill 集中托管、版本控制、变更审计。像管理代码一样管理 Agent 行为：变更可回溯、效果可对比度量、上线节奏可控，支持灰度发布与多人协同编辑。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Foundation</div>
+      <h4>AgentSpace 资源空间</h4>
+      <p>顶层工作空间，一个 AgentSpace 对应一个团队/业务线/独立项目的完整资源边界，绑定 CMS 2.0 工作空间、MSE 命名空间、SLS Project。默认单账号上限 50 个，实现多租户治理与权限隔离。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. 功能优势 ============ -->
+<section>
+  <h2><span class="num">05</span>六大功能优势</h2>
+  <table>
+    <thead><tr><th style="width:22%">优势</th><th>对比传统方案</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Agent 级观测</strong></td><td>传统 LLMOps 观测粒度止于单次模型调用；AgentLoop 以完整执行轨迹为对象，自动解析 Agent→Tool→Model 拓扑，支持业务视角与技术视角双维度分析。</td></tr>
+      <tr><td><strong>Agent-as-a-Judge</strong></td><td>LLM-as-a-Judge 仅通过 Prompt 模板单轮判断；Agent-as-a-Judge 评估器本身是 Agent，可回放轨迹、调用验证工具、对比历史基准。</td></tr>
+      <tr><td><strong>Trace2Dataset 飞轮</strong></td><td>原始日志被动堆积；Pipeline 自动过滤/去重/采样/聚类，持续加工为高质量数据集，实现"数据越跑越多、质量越用越高"。</td></tr>
+      <tr><td><strong>零侵入接入</strong></td><td>阿里云自研探针无需改造业务代码；同时兼容 OpenTelemetry 标准协议，覆盖主流 Agent 框架与自研系统。</td></tr>
+      <tr><td><strong>企业级安全合规</strong></td><td>行为留痕的审计能力 + 异常行为检测引擎，满足强合规行业对 Agent 系统运行过程的数据面审计/回溯要求。</td></tr>
+      <tr><td><strong>上下文工程闭环</strong></td><td>记忆库 + 经验库让 Agent 跨会话理解背景、从历史执行中学习最佳实践，无需重新训练模型即可"越用越聪明"。</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 6. 接入方式总览 ============ -->
+<section>
+  <h2><span class="num">06</span>接入方式全景</h2>
+  <p class="lead">AgentLoop 提供三条互补的接入路径，覆盖从"通用 Linux 运行时"到"具体 Agent 框架"再到"AI Coding Agent 端侧"的完整谱系。三者<strong>非互斥、可组合</strong>。</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <div class="tag">Path A</div>
+      <h4>AI 系统运行时日志（eBPF）</h4>
+      <p>Linux 内核层采集模型交互、进程、文件、网络行为。<strong>无需修改代码</strong>、无需重启业务，覆盖最广。<em>可观测链路暂未开放。</em></p>
+    </div>
+    <div class="card">
+      <div class="tag">Path B</div>
+      <h4>LoongSuite Pilot</h4>
+      <p>开发者本机轻量采集器，专注 AI Coding Agent（Claude Code、Codex、Cursor、Qoder 系列）。自动升级、无需重启。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Path C</div>
+      <h4>语言与框架探针</h4>
+      <p>Python aliyun-bootstrap、Java AliyunJavaAgent、Go instgo、Node.js SDK 及 OpenTelemetry 各语言 SDK。提供原生框架上下文。</p>
+    </div>
+  </div>
+
+  <h3>三条路径能力矩阵</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>能力 / 环境</th>
+        <th class="center">eBPF</th>
+        <th class="center">LoongSuite Pilot</th>
+        <th class="center">语言与框架探针</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>可观测产品</td><td class="center no">✕</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>审计产品</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center no">✕</td></tr>
+      <tr><td>评估产品</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>常见 Agent 框架</td><td class="center yes">✓ 广覆盖</td><td class="center no">✕</td><td class="center yes">✓ 主流</td></tr>
+      <tr><td>Python / Node.js 自研</td><td class="center yes">✓</td><td class="center no">✕</td><td class="center yes">✓</td></tr>
+      <tr><td>Rust 自研</td><td class="center no">✕</td><td class="center no">✕</td><td class="center no">✕</td></tr>
+      <tr><td>运行环境</td><td class="center">Linux / Docker / K8s</td><td class="center">Linux / macOS / Windows 开发环境</td><td class="center">Linux / macOS / Windows 主机与容器</td></tr>
+      <tr><td>升级影响</td><td class="center">手动升级采集器<br>无需重启业务</td><td class="center">自动升级<br>无需重启业务</td><td class="center">主机手动 / 容器自动<br>需重启应用</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>官方选型建议：</strong>在受支持的 Linux 主机或容器环境中，<strong>优先使用 eBPF</strong>；需要原生 Agent 或框架上下文时，同时叠加 LoongSuite Pilot 或语言与框架探针。典型组合 = eBPF（Runtime 事实 + 审计）+ 框架探针（原生 Session/Turn/Step + 可观测）。</div>
+</section>
+
+<!-- ============ 7. 非通用 Agent 框架接入详解 ============ -->
+<section>
+  <h2><span class="num">07</span>非通用 Agent 框架如何接入</h2>
+  <p class="lead">对于 <strong>Dify、OpenClaw、Hermes、AgentScope、AI Coding Agent</strong> 等"非通用"框架，AgentLoop 不走一刀切方案，而是针对每种框架的运行时特性提供专用接入路径。核心思路是：<em>顺着框架自身的插件/Hook 生态植入采集器，尽量不改业务代码。</em></p>
+
+  <h3>7.1 AI Coding Agent · LoongSuite Pilot 端侧方案</h3>
+  <p>面向 Claude Code、Codex、Cursor、Qoder 系列等<strong>开发者本机运行的 Coding Agent</strong>。LoongSuite Pilot 是本机轻量采集器，自动发现已安装 Agent 并部署对应 Hook 或插件。</p>
+
+  <table>
+    <thead><tr><th>Agent</th><th>集成方式</th><th class="center">Trace</th><th class="center">日志</th><th class="center">Token</th><th class="center">对话/Tool</th></tr></thead>
+    <tbody>
+      <tr><td>Claude Code</td><td>Hook</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>Codex</td><td>Hook</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>Cursor / Cursor CLI</td><td>Hook</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>Qoder / Qoder CN / Qoder Work</td><td>Hook / 本地数据轮询</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>OpenClaw</td><td>插件注入</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>Hermes Agent</td><td>原生目录插件</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>Qwen Code CLI / Qwen Work CN</td><td>Hook</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+      <tr><td>DeepSeek Harness / Grok Build / MiMo Code / OpenCode / Pi / Kiro CLI / Wukong / WorkBuddy</td><td>Hook / 插件注入 / CLI API 轮询 / 会话轮询</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center">视 Agent</td><td class="center yes">✓</td></tr>
+    </tbody>
+  </table>
+
+  <h4>一键安装（macOS / Linux）</h4>
+<pre><code>curl -fsSL https://aliyun-observability-release-cn-shanghai.oss-cn-shanghai.aliyuncs.com/loongsuite-pilot/installer.sh \
+  -o /tmp/loongsuite-pilot-installer.sh \
+&& bash /tmp/loongsuite-pilot-installer.sh install \
+  --collect-log "true" \
+  --collect-trace "true" \
+  --sls-project "&lt;SLS Project&gt;" \
+  --sls-logstore "&lt;SLS Logstore&gt;" \
+  --sls-endpoint "&lt;SLS Endpoint&gt;" \
+  --cms-license-key "&lt;Trace License Key&gt;" \
+  --cms-endpoint "&lt;Trace Endpoint&gt;" \
+  --cms-workspace "&lt;Trace Workspace&gt;" \
+  --service-name-prefix "&lt;服务名前缀&gt;"</code></pre>
+
+  <p>安装器会自动完成：检测本机支持的 AI Coding Agent → 让你选择需要采集的 Agent → 部署对应 Hook 或插件 → 写入本地配置 → 启动后台服务。本地数据默认写入 <code>~/.loongsuite-pilot/logs/output/*.jsonl</code>。</p>
+
+  <h4>数据脱敏（可选）</h4>
+  <p>LoongSuite Pilot 在事件发送到后端前，可对 Prompt、Completion、工具参数中的敏感数据脱敏。9 种内置规则覆盖 AccessKey、API Key、私钥、数据库 URL、身份证、手机号、邮箱、IPv4、银行卡。默认关闭，配置 <code>~/.loongsuite-pilot/config.json</code> 后 <code>loongsuite-pilot restart</code> 生效。</p>
+
+  <h3>7.2 OpenClaw · 双插件协同（Trace + Metrics）</h3>
+  <p>OpenClaw 通过 <code>opentelemetry-instrumentation-openclaw</code>（负责 Trace，遵循 OTel GenAI 语义规范）+ <code>diagnostics-otel</code>（负责 Metrics，采集 Token 速率、QPS、队列深度）两个插件协同上报。</p>
+
+  <h4>使用限制</h4>
+  <ul>
+    <li>OpenClaw 版本 ≥ <strong>v26.2.19</strong>（低于此版本无 diagnostics-otel 插件）</li>
+    <li>上报协议仅支持 <code>http/protobuf</code>，不支持 http/json 与 gRPC</li>
+    <li>数据类型仅支持 Trace 与 Metric，不支持 Log</li>
+  </ul>
+
+  <h4>一键安装</h4>
+<pre><code>curl -fsSL https://arms-apm-cn-hangzhou-pre.oss-cn-hangzhou.aliyuncs.com/opentelemetry-instrumentation-openclaw/install.sh \
+  | bash -s -- \
+  --endpoint "https://你的Endpoint" \
+  --x-arms-license-key "你的LicenseKey" \
+  --x-arms-project "你的Project" \
+  --x-cms-workspace "你的Workspace" \
+  --serviceName "你的服务名"</code></pre>
+
+  <p>脚本会自动：检查环境 → 下载解压插件 → 安装依赖 → 定位 diagnostics-otel → 更新 <code>openclaw.json</code>（两插件配置一次写完）→ 重启网关。</p>
+
+  <div class="callout"><strong>版本兼容陷阱：</strong><code>hooks.allowConversationAccess: true</code> 仅 OpenClaw ≥ 2026.4.25 支持。低于此版本必须删除 <code>hooks</code> 段，否则网关启动报 "Unrecognized key" 错误。</div>
+
+  <h3>7.3 Hermes Agent · 三种接入姿势并存</h3>
+  <p>Hermes Agent 官方镜像不含 pip3，无法走 ack-onepilot 自动注入，因此提供三种方案覆盖不同部署形态：</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <div class="tag">Option A</div>
+      <h4>容器环境内接入</h4>
+      <p>在 Dockerfile 中 <code>uv pip install</code> 探针 wheel 到 Hermes 内置虚拟环境，通过 <code>PYTHONPATH</code> 让 Python 进程启动时自动加载。适合 ACK/ACS/K8s 生产。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Option B</div>
+      <h4>商业版 Python 探针</h4>
+      <p>探针安装到独立目录 <code>~/.aliyun-python-agent/hermes</code>，写入 <code>sitecustomize.py</code>，通过 PYTHONPATH 注入。<strong>无需修改 Hermes 源码</strong>，可用于 <code>hermes gateway start</code> 长期运行。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Option C</div>
+      <h4>开源 LoongSuite</h4>
+      <p>官方 bash 脚本安装 <code>loongsuite-site-bootstrap</code> + Hermes 可观测插件，注册 <code>hermes-cms</code> 命令，<code>hermes-cms enable</code> 启用。适合本地开发、PoC、问题复现。</p>
+    </div>
+  </div>
+
+  <p>启动日志中出现 <code>Aliyun python agent is started</code> 即代表探针加载成功。</p>
+
+  <h3>7.4 Dify · 分层组件级接入</h3>
+  <p>Dify 由四个组件构成，AgentLoop 对每个组件采用不同的接入策略：</p>
+
+  <table>
+    <thead><tr><th>组件</th><th>接入方式</th><th>关键要点</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>dify-api</strong><br>执行引擎 API</td>
+        <td>K8s ack-onepilot 自动注入<br>或修改 entrypoint.sh</td>
+        <td>需先卸载冲突的 OTel 插件（celery/flask/redis/requests/logging/wsgi/fastapi/asgi/sqlalchemy），再 <code>pip install aliyun-bootstrap</code>；启动改用 <code>aliyun-instrument gunicorn ...</code>；必须设 <code>GEVENT_ENABLE=true</code>。</td>
+      </tr>
+      <tr>
+        <td><strong>workflow 应用</strong><br>LLM 应用</td>
+        <td>视 dify-api 版本而定</td>
+        <td>1.6.0 &lt; ver &lt; 1.11.2：单独配置；≤1.6.0 或 ≥1.11.2：接入 dify-api 后自动关联；≥1.13.0：在 dify-worker 配置 OTel Exporter。</td>
+      </tr>
+      <tr>
+        <td><strong>dify-plugin-daemon</strong><br>插件引擎</td>
+        <td>Go 探针 instgo<br>重新编译镜像</td>
+        <td>Dockerfile 中 <code>INSTGO_EXTRA_RULES="dify_python" ./instgo go build</code>，自动拉起插件运行时探针；每个插件生成独立应用名 <code>{daemon}_plugin_{name}_{version}</code>。</td>
+      </tr>
+      <tr>
+        <td><strong>sandbox</strong><br>代码沙箱（可选）</td>
+        <td>Go 探针 instgo</td>
+        <td>编译 <code>python.so</code> / <code>nodejs.so</code> 时注入 instgo，监控 Workflow 中 Python/Node.js 代码执行。</td>
+      </tr>
+      <tr>
+        <td><strong>nginx</strong><br>入口网关（可选）</td>
+        <td>OpenTelemetry Nginx 模块</td>
+        <td>超时、文件上传问题排查。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>ACK 一键接入：</strong>通过 ACK 的 <code>ack-dify</code> 组件使用 Dify 时，直接在 Helm 更新页面把 <code>arms.enabled</code> 设为 <code>true</code>、<code>appName</code> 设为 <code>"dify"</code>、<code>applicationType</code> 设为 <code>"Dify"</code>，即可完成接入。</div>
+
+  <h3>7.5 LangChain / LangGraph · Python 探针 + OTel 自动埋点</h3>
+  <p>基于 OpenTelemetry 标准的 Python 探针 <code>aliyun-bootstrap</code>，业务代码零改造。</p>
+
+<pre><code># 1. 安装探针
+pip3 install aliyun-bootstrap
+aliyun-bootstrap -a install
+
+# 2. 环境变量
+export ARMS_APP_NAME=my-agent-app
+export ARMS_REGION_ID=cn-hangzhou
+export ARMS_LICENSE_KEY=&lt;从接入中心获取&gt;
+
+# 3. 启动应用
+aliyun-instrument python app.py</code></pre>
+
+  <p>自动监控覆盖：Chain/Agent 执行链路、LLM 调用（模型/Token/输入输出）、Tool 调用、Retriever/RAG 链路、LangGraph 图节点执行与状态流转。</p>
+
+  <p><strong>流式场景要点：</strong>使用 <code>ChatOpenAI(streaming=True)</code> 时必须开启 <code>stream_usage=True</code> 才能采集 Token；调用 <code>agent.invoke</code> 时通过 <code>config.metadata</code> 传入 <code>session_id</code> 与 <code>user_id</code>，用于会话/用户维度分析。</p>
+
+  <h3>7.6 eBPF · 兜底通用方案（手把手接入指南）</h3>
+  <p>当目标 Agent 未被上述专用方案覆盖（例如自研 Agent、Rust Agent、其他语言），eBPF 提供 Linux 内核层的通用采集能力，<strong>无需修改代码、无需重启业务</strong>。以下是完整的接入操作流程。</p>
+
+  <p style="font-size:14px;color:var(--ink-3);margin-bottom:24px">📖 官方文档：<a href="https://help.aliyun.com/zh/document_detail/3049364.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">接入 AI 系统运行时日志（eBPF）</a> · <a href="https://help.aliyun.com/zh/document_detail/3049365.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">选择 AI Agent 接入方式</a></p>
+
+  <h4>Step 1 · 前置条件检查</h4>
+  <div class="card" style="margin-bottom:20px">
+    <ul style="margin:0">
+      <li>已开通 <a href="https://agentloop.console.aliyun.com" style="color:var(--ink)">AgentLoop</a> 服务并创建智能体空间（AgentSpace）</li>
+      <li>已在目标 Linux 主机、容器或集群中部署需要采集的 AI Agent</li>
+      <li>具备安装或更新 LoongCollector、执行接入命令和管理机器组的权限</li>
+      <li>目标环境满足接入页面展示的操作系统、内核和网络要求</li>
+      <li><strong>K8s DaemonSet 场景</strong>：ACK 的 LoongCollector 组件版本已升级到 <strong>3.3.10 及以上</strong>，并已在组件配置界面启用 <strong>eBPF 采集</strong>开关</li>
+    </ul>
+  </div>
+
+  <h4>Step 2 · 登录控制台并进入接入中心</h4>
+  <ol>
+    <li>登录 <a href="https://cmsnext.console.aliyun.com/agentloop/home" style="color:var(--ink)">AgentLoop 控制台</a></li>
+    <li>在左侧导航栏单击 <strong>接入中心</strong></li>
+    <li>在 <strong>AI 节点接入</strong> 区域单击 <strong>AI 系统运行时日志</strong></li>
+    <li>根据 Agent 的部署环境选择 <strong>Linux 主机</strong>、<strong>Docker</strong> 或 <strong>Kubernetes</strong> 等使用场景</li>
+  </ol>
+
+  <h4>Step 3 · 配置采集范围</h4>
+  <table>
+    <thead><tr><th>参数</th><th>说明</th><th>操作</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Project</strong></td>
+        <td>当前智能体空间绑定的 SLS Project</td>
+        <td>只读，自动填充</td>
+      </tr>
+      <tr>
+        <td><strong>Logstore</strong></td>
+        <td>运行时日志写入的 Logstore，固定为 <code>ebpf-event</code></td>
+        <td>只读，自动填充</td>
+      </tr>
+      <tr>
+        <td><strong>机器组</strong></td>
+        <td>需要采集的目标机器组</td>
+        <td>选择已有机器组或创建新机器组</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Step 4 · 配置 AgentSight 探测规则</h4>
+  <p>未修改配置时使用推荐的默认规则；修改任一规则后，以当前配置覆盖对应的默认规则。</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">Rule 1</div>
+      <h4>命令行白名单</h4>
+      <p>采集器通常可自动识别 AI Agent 并纳入采集；若目标进程未被识别，可通过白名单补充规则。每条规则包含 <strong>Agent 类型 + 命令行参数模式</strong>；命中规则的进程被标记为对应 Agent 类型。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Rule 2</div>
+      <h4>命令行黑名单</h4>
+      <p>排除不需要采集的进程模式，<strong>优先级高于白名单</strong>。适用于过滤掉测试进程、监控 agent 本身等不需要采集的进程。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Rule 3</div>
+      <h4>域名白名单</h4>
+      <p>决定哪些网络活动进入候选采集范围。默认规则包括<strong>百炼、OpenAI、Anthropic</strong> 等常见模型服务域名；使用其他模型服务商或自定义 AI 网关时可补充对应域名。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Rule 4</div>
+      <h4>Https Raw 流量</h4>
+      <p>开启后，无法解析为 LLM 语义的流量（未知 API path、非标准 body）不再被丢弃，而是以原始 HTTP 形式上报。<strong>需 LoongCollector 3.3.10+</strong>。</p>
+    </div>
+  </div>
+
+  <h4>Step 5 · 数据脱敏配置（可选）</h4>
+  <p>运行时日志可能包含手机号、邮箱、API Key 等敏感信息。可在接入配置中按需开启<strong>端侧数据脱敏</strong>，覆盖以下类型：</p>
+  <div class="chips">
+    <span class="chip">手机号</span>
+    <span class="chip">身份证号</span>
+    <span class="chip">邮箱地址</span>
+    <span class="chip">IP 地址</span>
+    <span class="chip">座机电话</span>
+    <span class="chip">银行卡号</span>
+  </div>
+  <p style="font-size:14px;color:var(--ink-3)">默认关闭；启用后脱敏数据仍保留必要上下文，可用于审计和问题排查。</p>
+
+  <h4>Step 6 · 安装 LoongCollector</h4>
+  <p>根据页面提示，在目标环境中<strong>安装或更新 LoongCollector 和采集配置</strong>。控制台会根据所选场景（Linux 主机 / Docker / Kubernetes DaemonSet）动态生成安装命令。</p>
+
+  <div class="callout"><strong>Linux 主机场景示例：</strong><br>控制台生成的安装命令通常包含：<code>curl -fsSL &lt;OSS下载地址&gt; | bash -s -- install --project &lt;Project&gt; --logstore ebpf-event --machine-group &lt;机器组&gt;</code><br>执行后 LoongCollector 会自动部署并启动采集服务。</div>
+
+  <div class="callout"><strong>K8s DaemonSet 场景：</strong><br>1. 确认 ACK 集群已安装 LoongCollector 组件（版本 ≥ 3.3.10）<br>2. 在组件配置界面启用 <strong>eBPF 采集</strong>开关<br>3. 控制台会自动为集群中的节点部署 DaemonSet</div>
+
+  <h4>Step 7 · 验证接入结果</h4>
+  <ol>
+    <li>在 <a href="https://sls.console.aliyun.com" style="color:var(--ink)">SLS 控制台</a> 检查 <code>ebpf-event</code> Logstore 是否已写入目标主机或容器的最新数据</li>
+    <li>有数据后，进入 <a href="https://help.aliyun.com/zh/document_detail/3045693.html" style="color:var(--ink)">审计管理</a> 或 <a href="https://help.aliyun.com/zh/document_detail/3045698.html" style="color:var(--ink)">审计事实</a>，确认目标节点、Agent 或进程能在对应时间范围内查询</li>
+    <li>触发一次 AI Agent 活动（如发送一条消息、执行一次工具调用），等待 2-3 分钟后刷新控制台查看数据</li>
+  </ol>
+
+  <h4>Step 8 · 常见问题排查</h4>
+  <table>
+    <thead><tr><th>问题</th><th>排查步骤</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Logstore 中没有数据</strong></td>
+        <td>
+          <ol style="margin:0;padding-left:18px">
+            <li>确认 LoongCollector 与采集配置已安装/更新成功</li>
+            <li>确认目标主机或容器属于所选机器组</li>
+            <li>确认查询时间范围覆盖接入后的运行时间</li>
+            <li>确认目标环境满足操作系统、内核和网络要求</li>
+          </ol>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>目标 Agent 未被识别</strong></td>
+        <td>
+          <ol style="margin:0;padding-left:18px">
+            <li>确认目标进程正在运行</li>
+            <li>采集器未能自动识别时，在<strong>命令行白名单</strong>中增加 Agent 类型和命令行参数模式</li>
+          </ol>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>采集到了不需要的进程</strong></td>
+        <td>在<strong>命令行黑名单</strong>中增加需排除的进程模式（黑名单优先）</td>
+      </tr>
+      <tr>
+        <td><strong>只能看到网络活动，无法看到完整模型交互</strong></td>
+        <td>
+          <ol style="margin:0;padding-left:18px">
+            <li>检查模型服务域名是否在<strong>域名白名单</strong>中</li>
+            <li>确认协议和运行时在支持范围内</li>
+            <li>域名白名单只改变候选范围，不保证 Payload 解析</li>
+            <li>需保留这类流量时开启 <strong>支持采集 Https Raw 流量</strong>（需 LoongCollector 3.3.10+）</li>
+          </ol>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>能力边界：</strong>eBPF 可能无法直接获取原生 Session、Turn、Step 标识及框架内部状态；Codex 因 Rust + 特殊 TLS 实现，LLM 载荷采集能力受限。需要框架上下文时叠加 LoongSuite Pilot 或语言探针。</div>
+
+  <h4>eBPF 接入流程图</h4>
+  <div class="flywheel" style="padding:20px">
+    <svg viewBox="0 0 720 160" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#111"/>
+        </marker>
+      </defs>
+      <g font-family="-apple-system,PingFang SC,Helvetica,Arial" font-size="12" fill="#111">
+        <rect x="20" y="50" width="100" height="50" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="70" y="72" text-anchor="middle" font-weight="600">Step 1</text>
+        <text x="70" y="88" text-anchor="middle" fill="#666" font-size="10">前置检查</text>
+
+        <rect x="140" y="50" width="100" height="50" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="190" y="72" text-anchor="middle" font-weight="600">Step 2-3</text>
+        <text x="190" y="88" text-anchor="middle" fill="#666" font-size="10">控制台配置</text>
+
+        <rect x="260" y="50" width="100" height="50" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="310" y="72" text-anchor="middle" font-weight="600">Step 4</text>
+        <text x="310" y="88" text-anchor="middle" fill="#666" font-size="10">AgentSight</text>
+
+        <rect x="380" y="50" width="100" height="50" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="430" y="72" text-anchor="middle" font-weight="600">Step 5</text>
+        <text x="430" y="88" text-anchor="middle" fill="#666" font-size="10">数据脱敏</text>
+
+        <rect x="500" y="50" width="100" height="50" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <text x="550" y="72" text-anchor="middle" font-weight="600">Step 6</text>
+        <text x="550" y="88" text-anchor="middle" fill="#666" font-size="10">安装探针</text>
+
+        <rect x="620" y="50" width="80" height="50" fill="#111" stroke="#111" stroke-width="1.5"/>
+        <text x="660" y="72" text-anchor="middle" fill="#fff" font-weight="600" font-size="11">Step 7</text>
+        <text x="660" y="88" text-anchor="middle" fill="#fff" font-size="10">验证</text>
+
+        <line x1="120" y1="75" x2="140" y2="75" stroke="#111" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <line x1="240" y1="75" x2="260" y2="75" stroke="#111" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <line x1="360" y1="75" x2="380" y2="75" stroke="#111" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <line x1="480" y1="75" x2="500" y2="75" stroke="#111" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <line x1="600" y1="75" x2="620" y2="75" stroke="#111" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+        <text x="360" y="130" text-anchor="middle" fill="#666" font-size="11">整个流程约 10-15 分钟，无需修改业务代码、无需重启应用</text>
+      </g>
+    </svg>
+  </div>
+
+  <h3>7.7 AI Agent 自动编排接入</h3>
+  <p><code>alibabacloud-agentloop-management</code> Skill 把接入流程封装为 AI Agent 可执行的结构化工作流。安装到 QoderWork / Cursor / Claude Code 后，用一句自然语言即可完成全流程接入：</p>
+
+<pre><code># 自然语言示例
+"帮我把 ACK 集群里的 LangChain 应用 customer-support-agent
+ 接入 AgentLoop 监控，Workspace 是 agentloop-2694ecf8****1f84542d"</code></pre>
+
+  <p>Skill 底层使用 AgentLoop CLI 与标准探针方案（ack-onepilot、AliyunJavaAgent、aliyun-bootstrap、instgo、OpenTelemetry）。核心机制是<strong>两阶段确认</strong>：Phase A 展示目标资源/命令/影响范围/回滚方式，Phase B 仅在用户明确批准后执行。</p>
+
+  <div class="callout"><strong>幻觉风险提示：</strong>AI Agent 由 LLM 驱动，可能存在命令参数错误、资源识别偏差等幻觉。尽管 Skill 内置两阶段确认，仍需在批准前逐项核对生成的命令与目标资源。生产环境建议先在测试环境完成接入验证。</div>
+
+  <h3>7.8 接入路径全景对照</h3>
+  <table>
+    <thead><tr><th>接入对象</th><th>推荐路径</th><th>典型部署</th></tr></thead>
+    <tbody>
+      <tr><td>AI Coding Agent（Claude Code / Codex / Cursor / Qoder）</td><td>LoongSuite Pilot</td><td>开发者本机 Linux / macOS / Windows</td></tr>
+      <tr><td>Agent 平台（OpenClaw / Hermes / QwenPaw / Coze）</td><td>专用插件 + 语言探针</td><td>K8s / ECS / 本机</td></tr>
+      <tr><td>Agent 框架（AgentScope / LangChain / LangGraph / Dify）</td><td>aliyun-bootstrap / instgo / ack-onepilot</td><td>K8s / ECS / Docker</td></tr>
+      <tr><td>Python / Node.js 自研 Agent</td><td>语言探针 或 eBPF</td><td>Linux 主机 / 容器</td></tr>
+      <tr><td>其他语言自研 / Rust Agent</td><td>eBPF（Codex 例外，载荷受限）</td><td>Linux 主机 / 容器</td></tr>
+      <tr><td>AI 系统运行时（通用兜底）</td><td>eBPF</td><td>Linux / Docker / K8s</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 8. 端到端使用全流程 ============ -->
+<section>
+  <h2><span class="num">08</span>端到端使用全流程（图文并茂）</h2>
+  <p class="lead">本章把 AgentLoop 从开通到优化的完整使用过程串成一条可照做的操作路径，并拆解数据是如何被采集上来的。配合两张流程图，帮助客户快速建立全景认知。</p>
+
+  <h3>8.1 使用全流程总览：QuickStart 八步</h3>
+  <p>官方推荐的渐进式上手路径：<strong>1 分钟创建 AgentSpace，5 分钟完成数据接入，1 小时完成首次评估，1 天实现首轮效果优化。</strong>整个流程分为八个步骤，前四步建立"观测 + 评估"基线，后四步完成"数据资产化 + 持续优化"闭环。</p>
+  <div class="figure"><img src="images/usage-flow.jpg" alt="图 6 · AgentLoop 端到端使用全流程：创建空间 → 接入数据 → 构建评估器 → 评估任务 → 数据集 → Agent 资产 → 记忆库 → 闭环验证" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 6 · AgentLoop 端到端使用全流程：创建空间 → 接入数据 → 构建评估器 → 评估任务 → 数据集 → Agent 资产 → 记忆库 → 闭环验证</div></div>
+
+  <table>
+    <thead><tr><th>步骤</th><th>操作</th><th>关键要点</th></tr></thead>
+    <tbody>
+      <tr><td><strong>① 创建智能体空间</strong></td><td>控制台首页 → 新建空间</td><td>选择地域（创建后不可换）；自动创建并绑定 CMS 2.0 工作空间、MSE 命名空间、SLS Project</td></tr>
+      <tr><td><strong>② 接入可观测数据</strong></td><td>接入中心选择接入方式</td><td>探针自动采集 LLM 调用、工具调用、Retriever、节点链路；观测页查看 Trace 数 / 耗时 / Token</td></tr>
+      <tr><td><strong>③ 构建评估器</strong></td><td>评估 → 评估器</td><td>预置评估器开箱即用；自定义评估器编写 Prompt + 挂载 Skills/MCP，实现 Agent-as-a-Judge</td></tr>
+      <tr><td><strong>④ 创建评估任务</strong></td><td>评估 → 评估任务</td><td>数据源选链路/日志/数据集；运行策略持续或历史；配置采样比例与字段映射</td></tr>
+      <tr><td><strong>⑤ 导入与标注数据集</strong></td><td>数据中心 → 数据集</td><td>从 Trace 数据处理（如 ot_trace_qa_extract）；人工标注沉淀 Golden / BadCase Set</td></tr>
+      <tr><td><strong>⑥ 管理 Agent 资产</strong></td><td>Agent 资产 → Prompts / Skills</td><td>用 {{input}} 占位符声明变量；版本自动递增；支持版本对比与灰度发布</td></tr>
+      <tr><td><strong>⑦ 创建并使用记忆库</strong></td><td>上下文工程 → 记忆库</td><td>创建 API Key；Mem0 客户端写入/检索；控制台长期/短期记忆检索</td></tr>
+      <tr><td><strong>⑧ 闭环验证</strong></td><td>跑通端到端闭环</td><td>触发流量 → 评估抓 Bad Case → 加入数据集标注 → 迭代 Prompt → 重跑评估对比 → 沉淀记忆库</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>闭环验证六步：</strong>① 触发线上 Agent 流量，确认 Trace 持续上报；② 评估任务输出当日质量分数，定位 1–2 个低分 Bad Case；③ 将 Bad Case 加入数据集并人工标注 Expected Output；④ 在 Agent 资产中迭代 Prompt 版本；⑤ 重新运行评估任务，对比新旧版本得分变化；⑥ 将稳定的人物画像与偏好沉淀到记忆库。整个闭环跑通即建立了"观测 → 评估 → 数据资产化 → 资产优化 → 上下文增强"的自进化飞轮。</div>
+
+  <h3>8.2 数据采集过程详解</h3>
+  <p>数据接入是数据飞轮的起点——没有高质量的运行数据，观测、评估、实验都无从谈起。AgentLoop 的数据采集构建在 <strong>OTel（OpenTelemetry）标准协议</strong>之上，以探针形式工作，整个链路分为五个阶段。</p>
+  <div class="figure"><img src="images/data-collection.jpg" alt="图 7 · 数据采集链路原理：Agent 运行 → 采集探针 → Trace ID 串联 → OTLP 上报 → 云端 Trajectory" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 7 · 数据采集链路原理：Agent 运行 → 采集探针 → Trace ID 串联 → OTLP 上报 → 云端 Trajectory</div></div>
+
+  <h4>采集链路五阶段</h4>
+  <table>
+    <thead><tr><th>阶段</th><th>做什么</th></tr></thead>
+    <tbody>
+      <tr><td><strong>① Agent 运行</strong></td><td>Agent 执行过程中产生模型调用、工具调用、RAG 检索、记忆读取等行为</td></tr>
+      <tr><td><strong>② 采集探针</strong></td><td>四种探针之一拦截并采集数据（见下表），业务代码无需或极少改造</td></tr>
+      <tr><td><strong>③ Trace ID 串联</strong></td><td>探针把各个"调模型、调工具"的位置以 Trace ID 串联，形成 Trace 拓扑图，还原完整执行轨迹</td></tr>
+      <tr><td><strong>④ OTLP 上报</strong></td><td>通过 OTel 标准协议上报到云端，携带 Endpoint + License Key（鉴权）+ Service Name（区分应用）</td></tr>
+      <tr><td><strong>⑤ 云端处理</strong></td><td>SLS 存储原始 Trace → Pipeline 清洗成 Trajectory → 供观测/审计/评估/优化四场景复用</td></tr>
+    </tbody>
+  </table>
+
+  <h4>四种采集探针如何工作</h4>
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">探针 1</div>
+      <h4>通用 Agent 一键埋点</h4>
+      <p>针对开箱即用的通用 Agent 做了专业化埋点，<strong>不需要任何开发工作</strong>，直接一键对接。</p>
+    </div>
+    <div class="card">
+      <div class="tag">探针 2</div>
+      <h4>框架 SDK 自动采集</h4>
+      <p>基于 AgentScope / LangChain 等框架时，SDK 在模型调用、工具调用等关键位置自动采集，<strong>埋点跟着框架走</strong>，开发者几乎无感。Python 用 <code>aliyun-bootstrap</code>，Go 用 <code>instgo</code>。</p>
+    </div>
+    <div class="card">
+      <div class="tag">探针 3</div>
+      <h4>高代码注解埋点</h4>
+      <p>高代码自研（含 AI-coding）场景，引用依赖包后在需要埋点处用<strong>注解</strong>采集。埋点位置的控制权交还给开发者，借助 AI-coding 增加几行埋点代码成本极低。</p>
+    </div>
+    <div class="card">
+      <div class="tag">探针 4</div>
+      <h4>eBPF 内核级采集</h4>
+      <p>完全不想改代码时的兜底方案——<strong>内核级监控，无需修改任何代码</strong>。观测 Agent 与模型网关的交互、执行工具过程中的指令，对应用完全透明，适合存量系统与闭源组件。</p>
+    </div>
+  </div>
+
+  <h4>采集机制的两个关键设计</h4>
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">设计 1</div>
+      <h4>OTel 标准协议底座</h4>
+      <p>OTel 是可观测性领域的事实标准，意味着<strong>接入不锁定、数据可互通</strong>。选标准协议做底座，本质是保证"今天接进来的数据，未来任何基于 OTel 的生态都能消费"。</p>
+    </div>
+    <div class="card">
+      <div class="tag">设计 2</div>
+      <h4>旁路采集不阻塞业务</h4>
+      <p>LoongSuite Pilot 等采集器是<strong>旁路进程</strong>，不在 Agent 执行路径上。采集的开销和故障都不会影响 Agent 本身——数据发不出去时，Agent 照常工作。</p>
+    </div>
+  </div>
+
+  <div class="callout"><strong>两个必填概念：</strong><code>Service Name</code> 是数据的"归属标识"，同一 AgentSpace 下区分不同应用；<code>License Key</code> 是数据的"通行证"，用于上报鉴权。没有 License Key 数据报不上来。</div>
+
+  <p style="font-size:14px;color:var(--ink-3);margin-top:24px">📖 官方文档：<a href="https://help.aliyun.com/zh/document_detail/3033823.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">QuickStart 全流程实践</a> · <a href="https://help.aliyun.com/zh/document_detail/3055994.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">数据接入：四种方式把 Agent 连进 AgentLoop</a></p>
+</section>
+
+<!-- ============ 8. 应用场景 ============ -->
+<section>
+  <h2><span class="num">09</span>典型应用场景与作用</h2>
+  <p>AgentLoop 的价值在五个典型企业场景中体现得最为直接：</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">Scenario 01</div>
+      <h4>智能客服质量提升</h4>
+      <p>对每轮对话进行质量评估，自动识别答非所问、幻觉回答、信息遗漏等 Bad Case；高频问题沉淀为数据集用于定向优化；记忆库保持用户偏好连续性，经验库沉淀复杂问题的最佳应答模式。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Scenario 02</div>
+      <h4>Coding Agent 质量守护</h4>
+      <p>对 Coding Agent 的完整执行轨迹进行观测与评估：任务规划合理性、工具调用准确性、代码产出正确性。上线前通过实验验证版本变更效果，线上通过持续评估拦截质量退化。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Scenario 03</div>
+      <h4>Agent 版本迭代质量门禁</h4>
+      <p>Prompt 调优、模型升级、Skill 新增前基于历史数据集进行 A/B 对比实验，量化准确性/延迟/成本差异；结合评估体系建立自动化质量门禁，确保只有通过回归测试的变更才能上线。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Scenario 04</div>
+      <h4>企业 Agent FinOps 治理</h4>
+      <p>精确追踪每个 Agent、每个工具调用、每次模型推理的 Token 消耗与耗时；识别成本热点（工具频繁超时触发重试、Prompt 模板 Token 异常）；对比不同模型/配置的成本效率比。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Scenario 05</div>
+      <h4>企业合规审计</h4>
+      <p>为 Agent 执行过程提供完整证据链留痕，按时间/用户/Agent 应用维度审计回放；异常行为检测引擎实时预警越权操作与敏感数据访问，满足强监管合规要求。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Scenario 06</div>
+      <h4>上下文工程持续优化</h4>
+      <p>记忆库让 Agent 跨会话理解用户背景与偏好；经验库让 Agent 从历史执行中学习最佳实践。两者结合，Agent 在每一轮交互中自动检索相关上下文注入运行时，实现"越用越聪明"。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9. 官方最佳实践详解 ============ -->
+<section>
+  <h2><span class="num">10</span>官方建议与最佳实践详解</h2>
+  <p class="lead">本章基于阿里云官方《AgentLoop 数据飞轮实践》系列（5 篇实操演示）与《QuickStart 全流程实践》整理，覆盖从数据接入到经验库消融实验的完整方法论。所有图表均提供 .drawio 源文件，可二次编辑。</p>
+
+  <h3>9.1 数据飞轮全景：七环节闭环</h3>
+  <p>AgentLoop 的核心任务是<strong>帮助用户调优 Agent，覆盖从开发到上线之后的持续调优全过程</strong>。开发期靠测试集和直觉尚能应付，上线之后面对的是真实、发散、持续涌入的用户请求——需要的不是几次手工调优，而是一套能<strong>自动发现问题、沉淀资产、验证效果</strong>的机制。</p>
+  <div class="figure"><img src="images/flywheel.jpg" alt="图 1 · AgentLoop 数据飞轮七环节闭环（接入 → 观测 → 审计 → 数据集 → 评估 → 实验 → 经验库 → 反哺 Agent）" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 1 · AgentLoop 数据飞轮七环节闭环（接入 → 观测 → 审计 → 数据集 → 评估 → 实验 → 经验库 → 反哺 Agent）</div></div>
+  <table>
+    <thead><tr><th>环节</th><th>回答的问题</th><th>关键动作</th></tr></thead>
+    <tbody>
+      <tr><td><strong>① 数据接入</strong></td><td>发生了什么</td><td>接入 Agent 运行轨迹（trace）数据，是一切的地基</td></tr>
+      <tr><td><strong>② 观测</strong></td><td>细节是什么</td><td>看清每一次运行：调了哪些模型、用了哪些工具、走了什么路径</td></tr>
+      <tr><td><strong>③ 审计</strong></td><td>是否合规安全</td><td>对运行轨迹做安全审计，覆盖合规视角检查</td></tr>
+      <tr><td><strong>④ 数据集</strong></td><td>弹药从哪来</td><td>观测与评估中发现的 badcase 沉淀到数据集，是飞轮的"弹药库"</td></tr>
+      <tr><td><strong>⑤ 评估</strong></td><td>做得好不好</td><td>从结果和过程两个角度评估响应质量</td></tr>
+      <tr><td><strong>⑥ 实验</strong></td><td>改动有没有用</td><td>一轮一轮回测，每轮观测整体分数，分数低就针对性调优</td></tr>
+      <tr><td><strong>⑦ 经验库</strong></td><td>怎么自动变好</td><td>后台算法自动从轨迹挖掘经验反哺 Agent，唯一无需人类专家介入的环节</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><strong>闭环理念：</strong>飞轮的关键不在于某一个环节多强，而在于<strong>环节之间首尾相接</strong>——评估的产出是实验的输入，实验的结论又指回下一轮评估，经验库则让每一圈都比上一圈起点更高。</div>
+
+  <h3>9.2 两种调优模式：专家驱动 vs 全自动化</h3>
+  <p>AgentLoop 把调优过程分成两种模式，对应不同阶段的诉求。两者<strong>不是二选一，而是互补</strong>：模式一建立标准、兜住业务底线，模式二在标准之上持续自动增益。</p>
+  <div class="figure"><img src="images/modes.jpg" alt="图 2 · 两种调优模式：人类专家驱动的手工闭环 vs 经验库全自动化" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 2 · 两种调优模式：人类专家驱动的手工闭环 vs 经验库全自动化</div></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">模式一</div>
+      <h4>人类专家驱动</h4>
+      <p>人类专家提供<strong>评判标准</strong>（什么样的回答是好的）→ 在线评估抓出 badcase → 沉淀进数据集 → 实验一轮回测 → 针对性调优。适合业务上线初期建立质量标准。价值不只是抓出 badcase，更是把专家头脑里"这个回答不行"的隐性判断，固化成可复用、可回测的显性标准（Rubric）。</p>
+    </div>
+    <div class="card">
+      <div class="tag">模式二</div>
+      <h4>全自动化（经验库）</h4>
+      <p>把通用优化手段沉淀成经验库 → 自动从历史轨迹挖掘经验 → Agent 装一个 Skill 自动召回 → 消融实验验证收益。可自动化挖掘的是通用维度：工具调用执行情况、延时、准确率、执行路径等，不依赖具体业务。</p>
+    </div>
+  </div>
+
+  <h3>9.3 渐进式接入路径</h3>
+  <p>官方推荐的渐进式路径，让团队以最小成本快速建立可观测性基线，再逐步深化。</p>
+  <div class="figure"><img src="images/roadmap.jpg" alt="图 3 · 渐进式接入最佳实践路径：1 分钟创建空间 → 5 分钟接入数据 → 1 小时首次评估 → 1 天首轮优化" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 3 · 渐进式接入最佳实践路径：1 分钟创建空间 → 5 分钟接入数据 → 1 小时首次评估 → 1 天首轮优化</div></div>
+  <ol>
+    <li><strong>观测先行</strong>——通过自研探针完成 Agent 全链路数据接入，5 分钟内在控制台看到 Trace 数据，快速建立可观测性基线。</li>
+    <li><strong>数据资产化</strong>——利用 Pipeline 将线上 Trace 自动转化为结构化数据集，结合标注沉淀 GroundTruth，从被动积累日志转变为主动构建数据资产。</li>
+    <li><strong>建立评估体系</strong>——从预置评估器起步（幻觉、正确性、任务完成度），面向在线业务实时质量评估；结合数据集与实验回测建立 Agent 质量度量基准线。</li>
+    <li><strong>持续优化闭环</strong>——通过 Agent 资产调优，或利用记忆库/经验库提升 Agent 长期表现，实现数据飞轮正循环。</li>
+  </ol>
+
+  <h3>9.4 数据接入：四种方式选型建议</h3>
+  <p>AgentLoop 的数据接入构建在 <strong>OTel（OpenTelemetry）标准协议</strong>之上，以探针形式工作。探针把 Agent 里各个调模型、调工具的地方以 Trace ID 串联，形成 Trace 拓扑图。选 OTel 做底座，本质是保证"今天接进来的数据，未来任何基于 OTel 的生态都能消费"。</p>
+  <table>
+    <thead><tr><th>接入方式</th><th>适用 Agent 形态</th><th>改造成本</th><th>覆盖与特点</th></tr></thead>
+    <tbody>
+      <tr><td><strong>通用 Agent 一键对接</strong></td><td>开箱即用的通用 Agent</td><td>无需任何开发工作</td><td>专业化埋点，一键对接</td></tr>
+      <tr><td><strong>Agent 框架 SDK 集成</strong></td><td>基于 AgentScope 等框架研发</td><td>SDK 自动采集，几乎无感</td><td>埋点跟着框架走，覆盖模型调用与工具调用</td></tr>
+      <tr><td><strong>自定义高代码注解埋点</strong></td><td>高代码自研（含 AI-coding）</td><td>引用依赖包 + 注解，成本极低</td><td>埋点位置由开发者控制，按需观测</td></tr>
+      <tr><td><strong>eBPF 无侵入</strong></td><td>存量系统、闭源组件</td><td>无需修改任何代码</td><td>内核级监控，同时覆盖模型调用与 Agent 执行</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><strong>两个必填概念：</strong><code>Service Name</code>（数据的"归属标识"，同一 AgentSpace 下区分不同应用）+ <code>License Key</code>（数据的"通行证"，用于上报鉴权）。四种方式不是互斥的选择题，而是按 Agent 形态和改造意愿选择成本最低的一条路。</div>
+
+  <h3>9.5 评估体系建设：从黄金指标到 Rubric</h3>
+  <p>评估体系是数据飞轮的核心驱动力。AgentLoop 的回答是建立一套<strong>可量化、可解释、可复用</strong>的评估体系——把"好不好"变成一组带权重的分数，把"为什么不好"变成可追溯的证据。</p>
+  <div class="figure"><img src="images/evaluation.jpg" alt="图 4 · 评估体系：黄金指标 → Rubric → 评估器 → 评估任务 → 结果分析 → badcase 闭环" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 4 · 评估体系：黄金指标 → Rubric → 评估器 → 评估任务 → 结果分析 → badcase 闭环</div></div>
+
+  <h4>第一步 · 定义黄金指标（Golden Metrics）</h4>
+  <p>评估的第一步不是写代码，而是回答：<strong>这个场景下，什么算"好"？</strong>以客服 Agent 为例，关注两类评估维度：</p>
+  <table>
+    <thead><tr><th>维度</th><th>含义</th><th>漏检风险</th></tr></thead>
+    <tbody>
+      <tr><td><strong>回答质量</strong></td><td>最终答案对不对、好不好</td><td>只看过程会漏掉"做对了但答非所问的"</td></tr>
+      <tr><td><strong>执行过程</strong></td><td>工具调用是否合理、路径是否绕远</td><td>只看结果会漏掉"蒙对的"</td></tr>
+    </tbody>
+  </table>
+  <p>制定黄金指标不一定要从零手写——可以让 AI 基于业务场景帮忙制定并拆解，输出一份含分档规则、权重、总分公式的 Rubric。</p>
+
+  <h4>第二步 · Rubric：让评估从"凭感觉"变成"可复现"</h4>
+  <div class="callout"><strong>Rubric</strong>：把抽象的"好"拆成一条条可判定的评分细则——每个指标在什么情况下打什么分数，每个指标占多少权重，最终汇总成一个加权分数。Rubric 写得越具体，打分就越稳定、越可解释。</div>
+  <p>两条补充经验：① 对业务足够熟悉也可人工制定，AI 只是提效手段；② 特别关注某个指标（如"是否泄露用户隐私"）时，可把它提出来作为<strong>顶层评估器单独评估</strong>，不淹没在总分里。</p>
+
+  <h4>第三步 · 创建评估器（Evaluator）</h4>
+  <p>评估器有两种类型，选择依据是指标能否用规则表达：</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">Code 评估</div>
+      <h4>代码规则打分</h4>
+      <p>确定、便宜，但只能覆盖能用规则表达的指标（格式、长度、字段完整性之类）。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Agent 评估</div>
+      <h4>评估 Agent 按 Rubric 判断</h4>
+      <p>让专门的评估 Agent 像人一样阅读输入、输出和轨迹，能理解语义，覆盖"回答是否切题""流程是否合理"这类规则写不出来的指标。代价是消耗更大——这也是采样配置存在的原因。</p>
+    </div>
+  </div>
+  <p>评估器的三个输入变量：<code>input</code>（用户问了什么）、<code>output</code>（Agent 答了什么）、<code>轨迹 trace.agent</code>（Agent 怎么一步步得出答案）。输出定义为结构化 Schema：</p>
+  <div class="chips">
+    <span class="chip">score 单项得分</span>
+    <span class="chip">final score 归一化总分</span>
+    <span class="chip">decision 结论判定</span>
+    <span class="chip">scenario type 场景分类</span>
+    <span class="chip">summary 结论摘要</span>
+    <span class="chip">explanation 结论解释</span>
+    <span class="chip">rubric version 版本号</span>
+  </div>
+  <div class="callout"><strong>关键实践：</strong>分数必须可解释（explanation），否则低分时不知道该改什么；Rubric 留版本号才能区分"分数变化是 Agent 变了还是标准变了"。评估器是长期复用的资产，初始配置越干净，后面维护越省心。</div>
+
+  <h4>第四步 · 创建评估任务（四个配置点）</h4>
+  <table>
+    <thead><tr><th>配置点</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>轨迹数据</strong></td><td>选 Trajectory（智能体行为视角：user prompt、每一步调用、最终输出和内部思考），而非 Trace（基础设施视角）。评估回答质量和执行过程要用轨迹数据。</td></tr>
+      <tr><td><strong>运行策略</strong></td><td>持续评估（来一条评一条，适合线上盯盘）/ 历史评估（对某段时间数据做一次完整评估，适合复盘）。</td></tr>
+      <tr><td><strong>采样配置</strong></td><td>评估消耗较大。只关心 badcase 时配置采样（如最大样本数 100、采样比例 100%）大幅降低成本。先用采样跑通流程，需要全量盯盘时再放开。</td></tr>
+      <tr><td><strong>字段映射</strong></td><td>把平台数据字段接到评估器变量：<code>trace.input→input</code>、<code>trace.output→output</code>、轨迹数据→<code>trace.agent</code>。映射正确，评估器才能拿到正确输入。</td></tr>
+    </tbody>
+  </table>
+
+  <h4>第五步 · 评估结果与 badcase 闭环</h4>
+  <p>结果页左边是每条数据的 Input/Output，右边是评估结论（平均分值 + 加权分数）。更有价值的是<strong>解释、summary、final score、decision 以及证据</strong>——看到的不是一个孤零零的 0.4 分，而是"哪一步做错了、依据是什么"，调优方向直接写在结果里。</p>
+  <div class="callout"><strong>浮动处理：</strong>单次评估存在浮动（同一评估器评同一条数据，分数可能略有差异），可以<strong>多次评估看均值</strong>，更客观地反映 Agent 质量。在线评估抓出的 badcase 沉淀进数据集，成为后续实验回测的弹药。</div>
+
+  <h3>9.6 实验与回测：证明优化真的有效</h3>
+  <p>改 Prompt、换模型、调参数，任何改动都可能产生"变好了"的错觉，但回归测试里的其他题目可能悄悄变差。答案是实验：用数据集里的题目反复回测，用分数验证改动效果。</p>
+
+  <h4>离线实验平台：安全测试内网 Agent</h4>
+  <p>Agent 往往部署在公司内网、仅内网可访问，云端平台无法直接访问，把数据搬出去测试又不现实。AgentLoop 提供<strong>离线实验平台</strong>，直接部署在客户内网，就近访问本地 Agent。</p>
+  <div class="figure"><img src="images/offline-lab.jpg" alt="图 5 · 离线实验平台架构：云端控制台 ↔ 内网实验平台 ↔ 本地 Agent，实验在内网完成执行无需搬出数据" style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:2px"><div class="figcaption">图 5 · 离线实验平台架构：云端控制台 ↔ 内网实验平台 ↔ 本地 Agent，实验在内网完成执行无需搬出数据</div></div>
+  <table>
+    <thead><tr><th>配置项</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>绑定 AgentSpace</strong></td><td>配置要测试、管理哪个智能体空间的实验，以及对应地域（region）</td></tr>
+      <tr><td><strong>Endpoint 与 VPC</strong></td><td>使用默认值即可；访问其他地域时修改为对应地域 Endpoint</td></tr>
+      <tr><td><strong>AccessKey</strong></td><td>需具备 AgentLoop FullAccess（读写）权限。建议申请专用 AccessKey，权限专用、用途单一，便于排查</td></tr>
+      <tr><td><strong>连接本地 Agent</strong></td><td>有状态 Agent 需"创建 Session → 获取 Session ID → 发送消息 → 获取响应"，在自定义调用代码中适配</td></tr>
+    </tbody>
+  </table>
+
+  <h4>定时调度与实验大盘</h4>
+  <p>单次实验验证改动效果，<strong>定时调度</strong>把回测变成日常（生产环境通常配置为每天回归）。每个实验计划自动创建<strong>实验大盘</strong>，提供整体分数、变化趋势与明细，支持按题目下钻。每天回测一次，分数变低立刻可见；调优完成后立即测试，改进也立刻可见。为消除单次评估浮动，可按时间窗口计算均值（如每 1 小时或每 5 分钟一个窗口）。</p>
+
+  <h4>分数分析方法论（避免最常见误判）</h4>
+  <ol>
+    <li><strong>分数变低要及时关注</strong>——这可能是 Agent 真的退化了。</li>
+    <li><strong>先排查 Rubric 定义</strong>——如果同一版本多次评估分数不稳、频繁波动，通常不是 Agent 变化，而是 Rubric 定义模糊。此时应优化评估器的 Rubric。</li>
+    <li><strong>再看版本差异</strong>——确认评估器没问题后，如果同一版本内分数稳定、不同版本之间存在差异，才是版本带来的真实差异。</li>
+  </ol>
+  <div class="callout"><strong>这套排查顺序避免了最常见的误判：把"尺子不准"当成"东西变差"。</strong></div>
+
+  <h4>题目级 Rubric：一个关键实践</h4>
+  <p>在线评估时用户问题非常发散，无法制定具体 Rubric，使用通用标准。但实验时 badcase 已抓取出来，已知具体问题——"如何做评估"和"有哪些功能"两道题的评估标准并不相同。如果用同一套 Rubric 评估两道题，优化时会失去方向。正确做法是<strong>把 Rubric 定义到题目级别</strong>，四步改造：</p>
+  <ol>
+    <li><strong>整理每道题的 Rubric</strong>：含每一项功能细项、单项判定、概念边界与扣分项。</li>
+    <li><strong>数据集 schema 加列</strong>：在字段管理中新增 <code>text</code> 类型的 <code>rubric</code> 字段，把每道题的 Rubric 写入对应题目。</li>
+    <li><strong>评估器改造</strong>：新增 <code>rubric</code> 变量，让评估器按传入的 Rubric 评估，输出合法 JSON（含 <code>rubric_id</code>、<code>score</code>、<code>reason</code>、<code>item_scores</code>）。</li>
+    <li><strong>实验侧绑定</strong>：将实验配置中的 Rubric 选项改为从数据集的 Rubric 读取。</li>
+  </ol>
+  <p>改造后每道题按自己的标准被评估，实验分数才真正具有指导意义——哪道题得分低，就补齐哪道题对应的能力点。</p>
+
+  <h3>9.7 经验库与消融实验：验证真实收益</h3>
+  <p>经验库的核心机制：<strong>算法自动从 Agent 运行轨迹中挖掘成功模式和失败模式</strong>，沉淀成经验资产，以上下文注入方式进入 Agent 运行过程。成功的模式告诉 Agent 该怎么做，失败的模式告诉 Agent 别怎么做。</p>
+
+  <h4>开启经验库与 Agent 集成</h4>
+  <ol>
+    <li><strong>创建经验库</strong>：选择对应应用并命名，设置挖掘起始时间（设早一点可挖掘更多轨迹）。每条经验可追溯来自哪条 Trace，不是黑箱结论。</li>
+    <li><strong>创建 API Key</strong>：Agent 访问经验库的凭证。</li>
+    <li><strong>安装 Skill</strong>：<code>alibabacloud-agentloop-experience</code>，在 Agent 目录下执行安装命令。</li>
+    <li><strong>写入 env 配置</strong>：让 Skill 知道去哪个经验库检索。</li>
+    <li><strong>三重权限</strong>：Skill 加入 Agent <strong>白名单</strong> + 打开 <strong>Shell 权限</strong> + 新建会话时 <strong>allow shell</strong>。三者缺一，召回就不会发生。</li>
+  </ol>
+  <div class="callout"><strong>召回是有判断的：</strong>与经验相关的问题会召回对应经验；没有类似经验时不会召回。这种宁缺毋滥的设计可以防止无关甚至错误的经验误导 Agent。</div>
+
+  <h4>消融实验：找到最佳注入策略</h4>
+  <p>看到步骤减少不宜直接上线。经验的注入方式（召回多少、放在哪、怎么呈现）会直接影响效果，甚至可能帮倒忙。正式部署前要做消融实验——<strong>固定其他条件，逐个改变单一注入因素，并与基线对照</strong>：</p>
+  <table>
+    <thead><tr><th>参数</th><th>说明</th><th>演示取值</th></tr></thead>
+    <tbody>
+      <tr><td><strong>召回阈值</strong></td><td>1 表示最相似，0 表示最不相似。太高会漏召回，太低会召回噪声</td><td>0.6（相对相似水位）</td></tr>
+      <tr><td><strong>注入条数</strong></td><td>不是越多越好，多了会稀释注意力、挤占上下文</td><td>top1（只取最相似一条）</td></tr>
+      <tr><td><strong>上下文位置</strong></td><td>位置影响模型对经验的采纳程度</td><td>真实问题 → 使用规则 → top1 经验</td></tr>
+      <tr><td><strong>经验瘦身</strong></td><td>原始经验带冗余细节，瘦身后信噪比更高</td><td>只保留标题摘要、使用条件、关键结论</td></tr>
+      <tr><td><strong>防护护栏</strong></td><td>经验来自过去，不一定适用当前</td><td>说明经验只是历史参考，防止负面影响</td></tr>
+    </tbody>
+  </table>
+
+  <h4>最终收益（演示实测值）</h4>
+  <div class="grid g4">
+    <div class="card"><div class="tag">耗时</div><h4>降低 30%~40%</h4><p>经验让 Agent 绕过试错环节，执行步骤显著减少</p></div>
+    <div class="card"><div class="tag">成本</div><h4>降低 20%~47%</h4><p>Token 消耗大幅下降</p></div>
+    <div class="card"><div class="tag">工具调用</div><h4>大幅减少</h4><p>绕过无效试错路径</p></div>
+    <div class="card"><div class="tag">步骤</div><h4>12 步 → 显著减少</h4><p>单请求初步观察</p></div>
+  </div>
+  <div class="callout"><strong>重要说明：</strong>以上为演示场景实测数字，<strong>不构成产品通用效果承诺</strong>。建议每位使用者在自己的真实业务场景里重复一遍消融实验，找到适合自己的最佳策略。</div>
+
+  <h3>9.8 数据集分类管理规范</h3>
+  <p>数据集是评估、实验和优化的基础，建议按用途分类管理：</p>
+  <table>
+    <thead><tr><th>类型</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><strong>评估基准集（Golden）</strong></td><td>人工审核的高质量样本集，作为评估的黄金标准</td></tr>
+      <tr><td><strong>Bad Case 集</strong></td><td>评估识别的失败案例集合，用于定向优化与回归测试</td></tr>
+      <tr><td><strong>线上采样集</strong></td><td>Pipeline 自动从线上 Trace 采样生成，用于持续监控与趋势分析</td></tr>
+      <tr><td><strong>实验数据集</strong></td><td>为特定实验计划准备，确保结果可比性与可复现性</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.9 Agent 资产版本管理建议</h3>
+  <p>以代码管理的思维管理 Agent 资产（Prompt 与 Skill）：</p>
+  <ul>
+    <li>每次 Prompt 或 Skill 变更创建新版本，保留完整变更历史（v0.0.1、v0.0.2 …自动递增）。</li>
+    <li>变更上线前通过实验验证效果差异，明确量化收益或风险。</li>
+    <li>利用灰度发布能力逐步放量，观察线上指标无异常后全量发布。</li>
+    <li>多人协同编辑时明确变更责任人和评审流程，通过版本锁与提交说明避免冲突。</li>
+  </ul>
+
+  <p style="font-size:14px;color:var(--ink-3);margin-top:24px">📖 官方实践教程：<a href="https://help.aliyun.com/zh/document_detail/3056208.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">AgentLoop 数据飞轮实践（5 篇系列）</a> · <a href="https://help.aliyun.com/zh/document_detail/3033823.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">QuickStart 全流程实践</a> · <a href="https://help.aliyun.com/zh/document_detail/3047254.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">经验库使用指南</a></p>
+</section>
+
+<!-- ============ 10. 使用限制 ============ -->
+<section>
+  <h2><span class="num">11</span>使用限制与前置条件</h2>
+  <div class="grid g2">
+    <div class="card">
+      <div class="tag">Quota</div>
+      <h4>资源配额</h4>
+      <p>AgentSpace 数量：单账号默认上限 <strong>50</strong> 个<br>Trace 保留时长：默认 <strong>30 天</strong>，可按需调整<br>评估并发：单账号默认 <strong>100</strong></p>
+    </div>
+    <div class="card">
+      <div class="tag">Prerequisites</div>
+      <h4>前置依赖</h4>
+      <p>已开通云监控 2.0、SLS 日志服务、MSE 微服务引擎（AI 治理中心）、AgentLoop；RAM 用户授予 <code>AliyunAgentLoopFullAccess</code>；已创建 AccessKey。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 11. 术语速查 ============ -->
+<section>
+  <h2><span class="num">12</span>核心概念速查</h2>
+  <table>
+    <thead><tr><th>术语</th><th>一句话定位</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AgentSpace</strong></td><td>顶层资源空间，资源隔离与多租户治理的基本单元</td></tr>
+      <tr><td><strong>Agent 应用</strong></td><td>已接入 AgentLoop 的具体 Agent 实例，统一观测与管理单元</td></tr>
+      <tr><td><strong>Trajectory</strong></td><td>单次请求的完整执行轨迹，含耗时/Token/状态；数据飞轮的基础单元</td></tr>
+      <tr><td><strong>Dataset</strong></td><td>可查询/评估/实验的结构化数据资产，支持自定义 Schema、版本管理、向量检索</td></tr>
+      <tr><td><strong>Pipeline</strong></td><td>自动化数据加工引擎：数据源 → 降维 → 特征提取 → AI 加工 → 写入</td></tr>
+      <tr><td><strong>Agent-as-a-Judge</strong></td><td>评估器本身是 Agent，可回放轨迹、调用工具、对比基准，接近人类专家</td></tr>
+      <tr><td><strong>Playground</strong></td><td>交互式实验环境，即时调试 Agent/Prompt/模型，无需完整实验流程</td></tr>
+      <tr><td><strong>Agent 资产</strong></td><td>Prompt + Skill 的集中托管，版本化与变更审计</td></tr>
+      <tr><td><strong>Memory / Experience</strong></td><td>记忆：记住用户和环境信息；经验：Agent 自身如何更好地完成任务</td></tr>
+      <tr><td><strong>UModel / Agent Ontology</strong></td><td>自动发现 Agent→Tool→Model 拓扑并构建全栈视图</td></tr>
+      <tr><td><strong>STAROps</strong></td><td>智能诊断引擎，定位性能瓶颈与 Token 消耗热点</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 12. 参考 ============ -->
+<footer>
+  <h3 style="margin-top:0;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:#999">Reference &amp; Contact</h3>
+  
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0">
+    <div>
+      <h4 style="font-size:13px;color:var(--ink);margin-bottom:12px;letter-spacing:.05em">官方文档入口</h4>
+      <p style="font-size:14px;line-height:2;margin:0">
+        <a href="https://www.aliyun.com/product/agentloop" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">产品主页</a><br>
+        <a href="https://help.aliyun.com/zh/product/3033820.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">文档主页</a><br>
+        <a href="https://agentloop.console.aliyun.com/agentloop/home" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">AgentLoop 控制台</a><br>
+        <a href="https://cmsnext.console.aliyun.com" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">云监控 2.0 控制台</a><br>
+        <a href="https://sls.console.aliyun.com" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">SLS 日志服务控制台</a>
+      </p>
+    </div>
+    <div>
+      <h4 style="font-size:13px;color:var(--ink);margin-bottom:12px;letter-spacing:.05em">核心文档链接</h4>
+      <p style="font-size:14px;line-height:2;margin:0">
+        <a href="https://help.aliyun.com/zh/document_detail/3033860.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">什么是 AgentLoop</a><br>
+        <a href="https://help.aliyun.com/zh/document_detail/3042001.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">核心概念</a><br>
+        <a href="https://help.aliyun.com/zh/document_detail/3033827.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">接入中心</a><br>
+        <a href="https://help.aliyun.com/zh/document_detail/3049365.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">选择 AI Agent 接入方式</a><br>
+        <a href="https://help.aliyun.com/zh/document_detail/3049364.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">接入 AI 系统运行时日志（eBPF）</a><br>
+        <a href="https://help.aliyun.com/zh/document_detail/3033823.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">AgentLoop QuickStart 全流程实践</a><br>
+        <a href="https://help.aliyun.com/zh/document_detail/3056208.html" style="color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)">AgentLoop 数据飞轮实践</a>
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;padding:20px;border:1px solid var(--line);background:var(--bg-2);border-radius:2px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+      <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600">雷</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--ink)">TAM 雷雨 · 技术服务专家</div>
+        <div style="font-size:13px;color:var(--ink-3)">阿里云全栈 AI 技术专家</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--ink-3);line-height:1.8;margin:0">
+      本文档联系人 · 如有技术问题或接入咨询，请联系雷雨
+    </p>
+  </div>
+
+  <p style="margin-top:24px;font-size:12px;color:#999;text-align:center">
+    本文档基于阿里云官方文档整理，内容截至 2026-09。原文以官方最新版本为准。<br>
+    © 2026 阿里云 · Agent 观测与优化 AgentLoop
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
